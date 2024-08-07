@@ -119,7 +119,31 @@ pub fn silu(y: &mut Tensor<f32>, x: &Tensor<f32>) {
 // C = beta * C + alpha * A @ B^T
 // hint: You don't need to do an explicit transpose of B
 pub fn matmul_transb(c: &mut Tensor<f32>, beta: f32, a: &Tensor<f32>, b: &Tensor<f32>, alpha: f32) {
-    todo!("实现 matmul_transb，计算前做一些必要的检查会帮助你后续调试");
+    // todo!("实现 matmul_transb，计算前做一些必要的检查会帮助你后续调试");
+
+    let row = c.shape()[0];
+    let col = c.shape()[1];
+
+    assert!(a.shape()[1] == b.shape()[1]);
+    let col_a = a.shape()[1];
+
+    let c_data= unsafe { c.data_mut() };
+    let a_data= a.data() ;
+    let b_data= b.data() ;
+
+    for i in 0..row {
+        let ci = &mut c_data[i*col..(i+1)*col];
+        let ai = &a_data[i*col_a..(i+1)*col_a];
+
+        for j in 0..col {
+            let bi = &b_data[j*col_a..(j+1)*col_a];
+            let mut sum: f32 = 0.0;
+            ai.iter().zip(bi.iter()).for_each( |(x, y)| {
+                sum += *x * *y;
+            });
+            ci[j] = sum * alpha + ci[j] * beta;
+        }
+    }
 }
 
 // Dot product of two tensors (treated as vectors)
