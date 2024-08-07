@@ -6,6 +6,7 @@ use crate::kvcache::KVCache;
 use crate::operators as OP;
 use crate::params::LLamaParams;
 use crate::tensor::Tensor;
+use crate::operators::{silu, rms_norm, matmul_transb};
 use safetensors::SafeTensors;
 use std::path::Path;
 pub struct Llama<T> {
@@ -167,7 +168,29 @@ fn mlp(
     rms_w: &Tensor<f32>,
     eps: f32,
 ) {
-    todo!("Implement mlp");
+    // todo!("Implement mlp");
+
+    // hidden = rms_norm(residual)
+    rms_norm(hidden_states, residual, rms_w, eps);
+
+    // gate = hidden @ gate_weight.T
+    matmul_transb(gate, 0.0, hidden_states, w_gate, 1.0);
+
+    // up = hidden @ up_weight.T
+    matmul_transb(up, 0.0, hidden_states, w_up, 1.0);
+
+    // hidden = gate * sigmoid(gate) * up ## silu
+    silu(up, gate);
+
+    // hidden = hidden @ down_weight.T
+    matmul_transb(hidden_states, 0.0, up, w_down, 1.0);
+
+    // residual = hidden + residual
+    let residual_data = unsafe{ residual.data_mut() };
+    let hidden_data = hidden_states.data();
+    for i in 0..residual_data.len() {
+        residual_data[i] += hidden_data[i];
+    }
 }
 
 #[test]
