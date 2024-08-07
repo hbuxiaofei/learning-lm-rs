@@ -71,7 +71,26 @@ pub fn masked_softmax(y: &mut Tensor<f32>) {
 }
 
 pub fn rms_norm(y: &mut Tensor<f32>, x: &Tensor<f32>, w: &Tensor<f32>, epsilon: f32) {
-    todo!("实现 rms_norm，计算前做一些必要的检查会帮助你后续调试")
+    // todo!("实现 rms_norm，计算前做一些必要的检查会帮助你后续调试")
+
+    let x_data= x.data();
+    let y_data= unsafe { y.data_mut() };
+    let w_data= w.data();
+
+    let row = x.shape()[0];
+    let col = x.shape()[1];
+
+    for i in 0..row {
+        let xi = &x_data[i*col..(i+1)*col];
+        let yi = &mut y_data[i*col..(i+1)*col];
+
+        let sum = xi.iter().map(|&e| e.powi(2)).sum::<f32>();
+        let rms = ((sum / col as f32) + epsilon).sqrt();
+
+        for j in 0..col {
+            yi[j] = w_data[j] * xi[j] / rms;
+        }
+    }
 }
 
 // y = sigmoid(x) * x * y
