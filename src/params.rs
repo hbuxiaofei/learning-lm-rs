@@ -1,8 +1,6 @@
 use crate::config::LlamaConfigJson;
 use crate::tensor::Tensor;
 use safetensors::{SafeTensors, View};
-
-#[derive(Default)]
 pub struct LLamaParams<T> {
     // token_id to embedding lookup table
     pub embedding_table: Tensor<T>, // (vocab_size, dim)
@@ -34,11 +32,6 @@ impl LLamaParams<f32> {
         //     ...
         // }
 
-        for name in safetensor.names() {
-            println!("> {}", name);
-            // println!("{:?}" ,safetensor.tensor(name));
-        }
-
         let get_tensor= |name: &str| {
             match safetensor.tensor(name) {
                 Ok(tv) => {
@@ -53,11 +46,6 @@ impl LLamaParams<f32> {
                 }
             }
         };
-
-        println!("\n");
-        println!("embedding_table lm_head.weight[50]: {}", get_tensor("lm_head.weight").data()[50]);
-        println!("rms_out_w       model.norm.weight[100]: {}", get_tensor("model.norm.weight").data()[100]);
-        println!("\n");
 
         let nr_layer = config.num_hidden_layers;
         Self {
