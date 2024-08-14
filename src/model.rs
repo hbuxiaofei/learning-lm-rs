@@ -135,9 +135,9 @@ impl Llama<f32> {
         temperature: f32,
     ) -> Vec<u32>{
         let mut result = Vec::<u32>::new();
-        
+
         todo!("实现文本生成");
-        
+
         result
     }
 }
@@ -179,10 +179,10 @@ fn mlp(
     // up = hidden @ up_weight.T
     matmul_transb(up, 0.0, hidden_states, w_up, 1.0);
 
-    // hidden = gate * sigmoid(gate) * up ## silu
+    // itermediate = gate * sigmoid(gate) * up ## silu
     silu(up, gate);
 
-    // hidden = hidden @ down_weight.T
+    // output = itermediate @ down_weight.T
     matmul_transb(hidden_states, 0.0, up, w_down, 1.0);
 
     // residual = hidden + residual
